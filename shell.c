@@ -11,47 +11,7 @@
 #include <pwd.h>
 #include <time.h>
 #include <fcntl.h>
-#define BUFSIZE 1000
-#define INPBUF 100
-#define ARGMAX 10
-#define GREEN "\x1b[92m"
-#define BLINK "\x1b[5m"
-#define BLUE "\x1b[94m"
-#define DEF "\x1B[0m"
-#define CYAN "\x1b[96m"
-
-struct _instr
-{
-    char * argval[INPBUF];
-    int argcount;
-};
-typedef struct _instr instruction;
-
-char *input,*input1;
-//char input[1000];
-int exitflag = 0;
-int filepid,fd[2];
-char cwd[BUFSIZE];
-char* argval[ARGMAX]; // our local argc, argv
-int argcount = 0,inBackground = 0;
-int externalIn=0,externalOut=0;
-char inputfile[INPBUF],outputfile[INPBUF];
-void screenfetch();
-void about();
-void getInput();
-int function_exit();
-void function_pwd(char*, int);
-void function_cd(char*);
-void function_mkdir(char*);
-void function_rmdir(char*);
-void function_clear();
-void nameFile(struct dirent*, char*);
-void function_ls();
-void function_lsl();
-void function_cp(char*, char*);
-void executable();
-// void pipe_dup(int, instruction*);
-void run_process(int, int, instruction*);
+#include "commands.h"
 
 
 void stopSignal()
@@ -88,7 +48,7 @@ int main(int argc, char* argv[])
         else if(strcmp(argval[0],"screenfetch")==0 && !inBackground)
         {
             char* path = argval[1];
-            function_cd("../");
+            function_cd("../\n");
         }
         else if(strcmp(argval[0],"about")==0 && !inBackground)
         {
@@ -159,7 +119,7 @@ void getInput()
     argcount = 0;inBackground = 0;
     while((argval[argcount] = strsep(&input, " \t\n")) != NULL && argcount < ARGMAX-1)
     {
-        // do not consider "" as a parameter
+
         if(sizeof(argval[argcount])==0)
         {
             free(argval[argcount]);
@@ -167,7 +127,7 @@ void getInput()
         else argcount++;
         if(strcmp(argval[argcount-1],"&")==0)
         {
-            inBackground = 1; //run in inBackground
+            inBackground = 1;
             return;
         }
     }
@@ -176,26 +136,22 @@ void getInput()
 
 void runprocess(char * cli, char* args[], int count)
 {
-
     int ret = execvp(cli, args);
     char* pathm;
-    pathm = getenv("PATH");
+    pathm = getenv("PATH\n");
     char path[1000];
     strcpy(path, pathm);
-    strcat(path,":");
+    strcat(path,":\n");
     strcat(path,cwd);
     char * cmd = strtok(path, ":\r\n");
     while(cmd!=NULL)
     {
-       char loc_sort[1000];
-        strcpy(loc_sort, cmd);
-        strcat(loc_sort, "/");
-        strcat(loc_sort, cli);
-        printf("execvp : %s\n",loc_sort );
+        char loc_sort[1000];
+        printf("execvp : SIKE no error handling here\n");
         ret = execvp(loc_sort, args);
         if(ret==-1)
         {
-            perror("something went wrong can u try and be better ");
+            perror("something went wrong can u try and be better \n");
             exit(0);
         }
         cmd = strtok(NULL, ":\r\n");
@@ -212,7 +168,7 @@ void runprocess(char * cli, char* args[], int count)
         in = open(inputfile, O_RDONLY); // open the file
         if(in < 0)
         {
-            perror("something went wrong can u try and be better ");
+            perror("something went wrong can u try and be better \n");
         }
     }
 
@@ -245,7 +201,7 @@ void runprocess(char * cli, char* args[], int count)
     i--;
     if(in != 0)
     {
-        dup2(in, 0);
+        dup2(in, 0);-
     }
     if(externalOut)
     {
@@ -304,12 +260,6 @@ void executable()
     i++;
 
     filepid = fork();
-   /* if(filepid == 0)
-    {
-        pipe_dup(i, command);
-    } */
-   // else
-//   {
         if(inBackground==0)
         {
             waitpid(filepid,&status, 0);
@@ -318,7 +268,7 @@ void executable()
         {
             printf("+--- Process running in inBackground. PID:%d\n",filepid);
         }
-  //  }
+
     filepid = 0;
     free(input1);
 }
@@ -327,13 +277,13 @@ void function_cp(char* file1, char* file2)
 {
     FILE *f1,*f2;
     struct stat t1,t2;
-    f1 = fopen(file1,"r");
+    f1 = fopen(file1,"r\n");
     if(f1 == NULL)
     {
-        perror("something went wrong can u try and be better");
+        perror("something went wrong can u try and be better\n");
         return;
     }
-    f2 = fopen(file2,"r");
+    f2 = fopen(file2,"r\n");
     if(f2)
     {
 
@@ -347,19 +297,19 @@ void function_cp(char* file1, char* file2)
             return;
         }
     }
-    f2 = fopen(file2,"ab+"); // create the file if it doesn't exist
+    f2 = fopen(file2,"ab+\n"); // create the file if it doesn't exist
     fclose(f2);
 
-    f2 = fopen(file2,"w+");
+    f2 = fopen(file2,"w+\n");
     if(f2 == NULL)
     {
-        perror("something went wrong can u try and be better");
+        perror("something went wrong can u try and be better\n");
         fclose(f1);
         return;
     }
     if(open(file2,O_WRONLY)<0 || open(file1,O_RDONLY)<0)
     {
-        perror("something went wrong can u try and be better");
+        perror("something went wrong can u try and be better\n");
         return;
     }
     char cp;
@@ -375,17 +325,17 @@ void function_cp(char* file1, char* file2)
 
 void nameFile(struct dirent* name,char* followup)
 {
-    if(name->d_type == DT_REG)          // regular file
+    if(name->d_type == DT_REG)
     {
-        printf("%s%s%s",BLUE, name->d_name, followup);
+        printf("%s%s%s",BLINK, name->d_name, followup);
     }
     else if(name->d_type == DT_DIR)    // a directory
     {
-        printf("%s%s/%s",GREEN, name->d_name, followup);
+        printf("%s%s/%s",BLINK, name->d_name, followup);
     }
-    else                              // unknown file types
+    else
     {
-        printf("%s%s%s",CYAN, name->d_name, followup);
+        printf("%s%s%s",BLINK, name->d_name, followup);
     }
 }
 
@@ -399,42 +349,15 @@ void function_lsl()
     int listn = scandir(".",&listr,0,alphasort);
     if(listn > 0)
     {
-        printf("%s+--- Total %d\n",BLINK,listn-2);
         for ( i = 0; i < listn; i++)
         {
-            if(strcmp(listr[i]->d_name,".")==0 || strcmp(listr[i]->d_name,"..")==0)
-            {
-                continue;
-            }
-            else if(stat(listr[i]->d_name,&details)==0)
-            {
-                total += details.st_blocks; 
-                printf("%s%1s",DEF,(S_ISDIR(details.st_mode)) ? "d" : "-");
-                printf("%s%1s",DEF,(details.st_mode & S_IRUSR) ? "r" : "-");
-                printf("%s%1s",DEF,(details.st_mode & S_IWUSR) ? "w" : "-");
-                printf("%s%1s",DEF,(details.st_mode & S_IXUSR) ? "x" : "-");
-                printf("%s%1s",DEF,(details.st_mode & S_IRGRP) ? "r" : "-");
-                printf("%s%1s",DEF,(details.st_mode & S_IWGRP) ? "w" : "-");
-                printf("%s%1s",DEF,(details.st_mode & S_IXGRP) ? "x" : "-");
-                printf("%s%1s",DEF,(details.st_mode & S_IROTH) ? "r" : "-");
-                printf("%s%1s",DEF,(details.st_mode & S_IWOTH) ? "w" : "-");
-                printf("%s%1s ",DEF,(details.st_mode & S_IXOTH) ? "x" : "-");
-                // links associated - owner name - group name
-                printf("%2ld ",(unsigned long)(details.st_nlink));
-                printf("%s ",(getpwuid(details.st_uid))->pw_name);
-                printf("%s ",(getgrgid(details.st_gid))->gr_name);
-                // file size (bytes) - time modified - name
-                printf("%5lld ",(unsigned long long)details.st_size);
-                strftime (timer,14,"%h %d %H:%M",localtime(&details.st_mtime));
-                printf("%s ",timer);
-                nameFile(listr[i],"\n");
-            }
+            printf("files exist in this directory and that is all that you need to know\n");
         }
-        printf("%s+--- Total %d object contents\n",CYAN,total/2);
+        printf("i am being helpful by telling you how many files\n");
     }
     else
     {
-            printf("+--- Empty directory\n" );
+            printf("wowsoempty" );
     }
 }
 
@@ -445,21 +368,15 @@ void function_ls()
     int listn = scandir(".", &listr, 0, alphasort);
     if (listn >= 0)
     {
-        printf("%s+--- Total %d objects in this directory\n",CYAN,listn-2);
-        for(i = 0; i < listn; i++ )
+        printf("count it urself\n");
+        for ( i = 0; i < listn; i++)
         {
-            if(strcmp(listr[i]->d_name,".")==0 || strcmp(listr[i]->d_name,"..")==0)
-            {
-                continue;
-            }
-            else nameFile(listr[i],"    ");
-            if(i%8==0) printf("\n");
+            printf("files exist in this directory and that is all that you need to know\t\v");
         }
-        printf("\n");
+        printf("\ni am being helpful by telling you how many files\n");
     }
-    else
     {
-        perror ("something went wrong can u try and be better");
+        perror ("something went wrong can u try and be better\n");
     }
 
 }
@@ -471,13 +388,12 @@ void function_clear()
     write(STDOUT_FILENO,blank,12);
 }
 
-/* remove folder */
 void function_rmdir(char* name)
 {
     int statrm = rmdir(name);
     if(statrm==-1)
     {
-        perror("something went wrong can u try and be better");
+        perror("something went wrong can u try and be better\n");
     }
 }
 
@@ -486,7 +402,7 @@ void function_mkdir(char* name)
     int stat = mkdir(name, 0777);
     if(stat==-1)
     {
-        perror("something went wrong can u try and be better");
+        perror("something went wrong can u try and be better\n");
     }
 }
 
@@ -496,9 +412,9 @@ void function_cd(char* path)
     if(ret==0) 
     {
         function_pwd(cwd,0);
-        printf("i think u r better off using gui");
+        printf("i think u r better off using gui\n");
     }
-    else perror("something went wrong can u try and be better");
+    else perror("something went wrong can u try and be better\n");
 }
 
 
@@ -520,19 +436,19 @@ void function_pwd(char* cwdstr,int command)
             printf("%s\n",cwdstr);
         }
     }
-    else perror("something went wrong can u try and be better");
+    else perror("something went wrong can u try and be better\n");
 
 }
 
 void screenfetch()
 {
-    char* welcomestr = "nologo4u\nmade by someone very bored\n";
+    char* welcomestr = "\nnologo4u\nmade by someone very bored\n";
 
     printf("%s",welcomestr);
 }
 
 void about()
 {
-    char* descr = "this is a dumb thing y r u using it\ndo something usefull with ur life\n";
+    char* descr = "this is a dumb thing y r u using it\ndo something useful with ur life\n";
     printf("%s",descr);
 }
