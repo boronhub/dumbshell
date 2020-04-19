@@ -1,7 +1,7 @@
 # dumbshell
 an extremely unintuitive shell
 
-[![https://raw.githubusercontent.com/boronhub/dumbshell/master/logo.png](https://raw.githubusercontent.com/boronhub/dumbshell/master/logo.png "https://raw.githubusercontent.com/boronhub/dumbshell/master/logo.png")](http://https://raw.githubusercontent.com/boronhub/dumbshell/master/logo.png "https://raw.githubusercontent.com/boronhub/dumbshell/master/logo.png")
+<img src="https://raw.githubusercontent.com/boronhub/dumbshell/master/logo.png" alt="drawing" width="200"/>
 
 - no command does what it's meant to do
 - there is absolutely no error handling or reporting
